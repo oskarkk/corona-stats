@@ -7,6 +7,7 @@ from copy import deepcopy
 
 import scrapper
 
+emoji = {'virus': '🦠', 'skull': '💀', 'ok':'✅', 'world': '🌍'}
 cases_url = 'https://corona-stats.online/?format=json&source=2'
 
 def merge_cases_and_tests(cases, tests):
@@ -25,7 +26,6 @@ def merge_cases_and_tests(cases, tests):
 # replace links to pics by emoji flags
 def add_flags(stats):
     for country in stats['data']:
-        print(country)
         country['countryInfo']['flag'] = flag(country['countryInfo']['iso2'])
     return
 
@@ -43,8 +43,33 @@ def world(data):
 def pretty(x):
     return cpprint(x, indent=2)
 
-def polska():
-    return
+def polska(data):
+    for x in stats['data']:
+        if x['countryInfo']['iso2'] == 'PL':
+            return x
+
+# poland new, poland total, world total
+# TODO: world top
+def summary(max=5):
+    pl = polska(stats)
+    w = stats['worldStats']
+    print(emoji['virus'], pl['todayCases'], '/', emoji['skull'], pl['todayDeaths'])
+    print(pl['countryInfo']['flag']+'  ', emoji['virus'], pl['cases'], '/', emoji['skull'], pl['deaths'], '/', emoji['ok'], pl['recovered'])
+    print(
+        emoji['world']+'  ',
+        emoji['virus'], nums(w['cases']), '/',
+        emoji['skull'], nums(w['deaths']), '/',
+        emoji['ok'], nums(w['recovered'])
+    )
+
+def nums(x):
+    if x < 951:
+        return str(round(x,-2))
+    elif x < 1000000:
+        return str(round(x,-3))[:-3]+'k'
+    else:
+        s = str(round(x,-3))[:-5]
+        return s[:-1] + ',' + s[-1:] + 'M'
 
 if __name__ == '__main__':
     cases = requests.get(cases_url).json()
