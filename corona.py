@@ -12,7 +12,7 @@ resp = requests.get(stats_url).json()
 
 def save(data, filename):
     with open(filename, 'w') as f:
-        f.write(data)
+        f.write(str(data))
 
 def countries(data, sort='cases', max=15):
     data['data'].sort(key=lambda x: x[sort], reverse=1)
@@ -41,16 +41,14 @@ def tests():
         cells = country(['th','td'])
         # nie zadziała bo nie każda komórka ma zawartość
         #stats = dict(zip( headers, [next(x.stripped_strings) for x in cells] ))
-        values = []
-        for cell in cells:
-            try:
-                values.append(next(cell.stripped_strings))
-            except StopIteration:
-                values.append('')
-                pass
+        values = [cell.get_text().strip() for cell in cells]
         stats = dict(zip(headers, values))
         # nie zadziała bo nie w każdym wierszu jest ten atrybut daty
         # stats['date'] = cells[3].span['data-sort-value']
+
+        # remove regions of countries
+        if ':' in stats['country']:
+            continue
         data.append(stats)
 
     return data
