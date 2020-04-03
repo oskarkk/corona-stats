@@ -7,7 +7,7 @@ from copy import deepcopy
 
 import scrapper
 
-emoji = {'virus': '🦠', 'skull': '💀', 'ok':'✅', 'world': '🌍'}
+emoji = {'virus': '🦠', 'skull': '💀', 'ok':'✅', 'world': '🌍', 'testtube': '🧪'}
 cases_url = 'https://corona-stats.online/?format=json&source=2'
 
 def merge_cases_and_tests(cases, tests):
@@ -53,8 +53,22 @@ def polska(data):
 def summary(max=5):
     pl = polska(stats)
     w = stats['worldStats']
+    date = datetime.datetime.strptime(pl['tests']['date'],'%Y-%m-%d')
+    if date.date() == datetime.date.today():
+        weekday = 'dziś'
+    else:
+        weekdays = ['niedzielę', 'poniedziałek', 'wtorek', 'środę', 'czwartek', 'piątek', 'sobotę']
+        weekday = 'w ' + weekdays[int(date.strftime('%w'))]
+
     print(emoji['virus'], pl['todayCases'], '/', emoji['skull'], pl['todayDeaths'])
-    print(pl['countryInfo']['flag']+'  ', emoji['virus'], pl['cases'], '/', emoji['skull'], pl['deaths'], '/', emoji['ok'], pl['recovered'])
+    print(
+        pl['countryInfo']['flag']+'  ',
+        emoji['virus'], pl['cases'], '/',
+        emoji['skull'], pl['deaths'], '/',
+        emoji['ok'], pl['recovered'], '/',
+        emoji['testtube'], nums(pl['tests']['tests']),
+        '\n(liczba testów aktualizowana', weekday+')'
+    )
     print(
         emoji['world']+'  ',
         emoji['virus'], nums(w['cases']), '/',
