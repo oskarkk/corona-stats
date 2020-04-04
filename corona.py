@@ -1,6 +1,6 @@
 #!/usr/bin/python -i
 
-import requests, datetime, json
+import requests, datetime, json, itertools
 from flag import flag # flag('us')
 from prettyprinter import cpprint
 from copy import deepcopy
@@ -23,6 +23,16 @@ def merge_cases_and_tests(cases, tests):
                 del country_s['tests']['country']
     return stats
 
+# new / (total - new)
+def ratio(new, total):
+    denom = total - new
+    return round(new / denom, 3) if denom else None
+
+def add_ratios(data):
+    for c in itertools.chain(data['data'], [data['worldStats']]):
+        c['todayCasesRatio'] = ratio(c['todayCases'], c['cases'])
+        c['todayDeathsRatio'] = ratio(c['todayDeaths'], c['deaths'])
+
 # replace links to pics by emoji flags
 def add_flags(stats):
     for country in stats['data']:
@@ -32,6 +42,10 @@ def add_flags(stats):
 def save(data, filename):
     with open(filename, 'w') as f:
         f.write(json.dumps(data))
+
+def load(filename):
+    with open(filename, 'r') as f:
+        return f.read()
 
 def countries(data, sort='cases', rev=1, max=None):
     data['data'].sort(key=lambda x: x[sort], reverse=rev)
@@ -57,7 +71,8 @@ def summary(max=5):
     if date.date() == datetime.date.today():
         weekday = 'dziś'
     else:
-        weekdays = ['niedzielę', 'poniedziałek', 'wtorek', 'środę', 'czwartek', 'piątek', 'sobotę']
+        weekdays = ['niedzielę', 'poniedziałek', 'wtorek', 'środę',
+                    'czwartek', 'piątek', 'sobotę']
         weekday = 'w ' + weekdays[int(date.strftime('%w'))]
 
     print(emoji['virus'], pl['todayCases'], '/', emoji['skull'], pl['todayDeaths'])
@@ -90,3 +105,4 @@ if __name__ == '__main__':
     tests = scrapper.tests()
     stats = merge_cases_and_tests(cases, tests)
     add_flags(stats)
+    add_ratios(stats)
