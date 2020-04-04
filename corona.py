@@ -32,6 +32,7 @@ def add_ratios(data):
     for c in itertools.chain(data['data'], [data['worldStats']]):
         c['todayCasesRatio'] = ratio(c['todayCases'], c['cases'])
         c['todayDeathsRatio'] = ratio(c['todayDeaths'], c['deaths'])
+        c['fatalityRate'] = round(c['deaths'] / c['cases'] if c['cases'] else None, 3)
 
 # replace links to pics by emoji flags
 def add_flags(stats):
