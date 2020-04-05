@@ -19,6 +19,16 @@ name_map = {
     'United Arab Emirates': 'UAE'
 }
 
+# remove unneeded characters etc
+# U+202C POP DIRECTIONAL FORMATTING - PDF character only
+# ^ this rather shouldn't be here and probably someone just copied it
+# with the number from somewhere
+def clean(s):
+    dirt = ['\u202c']
+    for d in dirt:
+        s = s.replace(d, '')
+    return s
+
 # scrapper for table from wikipedia with coronavirus tests by country
 def tests():
     html = requests.get(table_url).text
@@ -30,7 +40,7 @@ def tests():
 
     for country in countries:
         cells = country(['th','td'])
-        values = [cell.get_text().strip() for cell in cells]
+        values = [clean(cell.get_text().strip()) for cell in cells]
         stats = dict(zip(headers, values))
 
         # remove regions of countries
@@ -55,6 +65,12 @@ def tests():
         for stat in ['tests_per_M_people', 'positive_per_k_tests']:
             if stat in stats:
                 stats[stat] = float(stats[stat].replace(',',''))
+
+        # Earlier, they didn't have China in the list, they only had China's
+        # provinces. Now there is an empty "China" row (only country name),
+        # so let's just remove everything that doesn't have a date
+        # (that's where an exception was thrown in code below).
+        if not 'date' in stats: continue
 
         # change dates from something like "2 Apr" to yyyy-mm-dd
         # span['data-sort-value'] won't work cos date attr isn't in every row
