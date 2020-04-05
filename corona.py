@@ -109,7 +109,9 @@ def summary(filename=None, max=5):
 
     s = [
         emoji['virus'], pl['todayCases'], '/',
-        emoji['skull'], pl['todayDeaths'], '\n\n',
+        emoji['skull'], pl['todayDeaths'],
+        '\nŚmiertelność wynosi aktualnie',
+        str(round(pl['fatalityRate']*100, 1)) + '%\n\n',
 
         pl['countryInfo']['flag']+'  ',
         emoji['virus'], pl['cases'], '/',
