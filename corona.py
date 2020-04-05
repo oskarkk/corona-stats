@@ -65,7 +65,7 @@ def polska(data):
 
 # poland new, poland total, world total
 # TODO: world top
-def summary(max=5):
+def summary(filename=None, max=5):
     pl = polska(stats)
     w = stats['worldStats']
     date = datetime.datetime.strptime(pl['tests']['date'],'%Y-%m-%d')
@@ -76,21 +76,28 @@ def summary(max=5):
                     'czwartek', 'piątek', 'sobotę']
         weekday = 'w ' + weekdays[int(date.strftime('%w'))]
 
-    print(emoji['virus'], pl['todayCases'], '/', emoji['skull'], pl['todayDeaths'])
-    print(
+    s = [
+        emoji['virus'], pl['todayCases'], '/',
+        emoji['skull'], pl['todayDeaths'], '\n\n',
+
         pl['countryInfo']['flag']+'  ',
         emoji['virus'], pl['cases'], '/',
         emoji['skull'], pl['deaths'], '/',
         emoji['ok'], pl['recovered'], '/',
         emoji['testtube'], nums(pl['tests']['tests']),
-        '\n(liczba testów aktualizowana', weekday+')'
-    )
-    print(
+        '\n(liczba testów aktualizowana', weekday+')\n\n',
+
         emoji['world']+'  ',
         emoji['virus'], nums(w['cases']), '/',
         emoji['skull'], nums(w['deaths']), '/',
         emoji['ok'], nums(w['recovered'])
-    )
+    ]
+    
+    if filename:
+        with open(filename, 'w') as f:
+            print(*s, file=f)
+    
+    print(*s)
 
 def nums(x):
     if x < 951:
