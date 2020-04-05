@@ -10,11 +10,22 @@ import scrapper
 emoji = {'virus': '🦠', 'skull': '💀', 'ok':'✅', 'world': '🌍', 'testtube': '🧪'}
 cases_url = 'https://corona-stats.online/?format=json&source=2'
 
+# merging AND cleaning things in <cases>
 def merge_cases_and_tests(cases, tests):
     stats = deepcopy(cases)
 
     # remove countries which aren't countries (e.g. Diamond Princess)
+    # maybe it would be better to find one contry and just del it
     stats['data'] = [ x for x in stats['data'] if x['countryInfo']['_id'] ]
+
+    # in the json from corona-stats.online sometimes there is null
+    # where should just be 0
+    for country in stats['data']:
+        for x in ('cases', 'deaths', 'todayCases', 'todayDeaths'):
+            if country[x] == None:
+                # give a warning just in case
+                print(country, '\nchanging None to 0')
+                country[x] = 0
 
     for country_s in stats['data']:
         for country_t in tests:
@@ -32,11 +43,12 @@ def add_ratios(data):
     for c in itertools.chain(data['data'], [data['worldStats']]):
         c['todayCasesRatio'] = ratio(c['todayCases'], c['cases'])
         c['todayDeathsRatio'] = ratio(c['todayDeaths'], c['deaths'])
-        c['fatalityRate'] = round(c['deaths'] / c['cases'] if c['cases'] else None, 3)
+        c['fatalityRate'] = round(c['deaths'] / c['cases'] \
+                                  if c['cases'] else None, 3)
 
 # replace links to pics by emoji flags
-def add_flags(stats):
-    for country in stats['data']:
+def add_flags(data):
+    for country in data['data']:
         country['countryInfo']['flag'] = flag(country['countryInfo']['iso2'])
     return
 
@@ -54,6 +66,12 @@ def countries(data, sort='cases', rev=1, max=None):
 
 def world(data):
     return data['worldStats']
+
+# name mess but it works
+def country(data, name):
+    for country in data['data']:
+        if country['country'] == name:
+            return country
 
 def pretty(x):
     return cpprint(x, indent=2)
