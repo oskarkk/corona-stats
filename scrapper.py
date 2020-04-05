@@ -48,7 +48,9 @@ def tests():
         # change vals to ints
         for stat in ['tests', 'positive']:
             if stat in stats:
-                stats[stat] = int(stats[stat].replace(',',''))
+                # almost always they separate thousands with ','
+                # but sometimes '.'
+                stats[stat] = int(stats[stat].replace(',','').replace('.',''))
         # change vals that sometimes are floats to floats
         for stat in ['tests_per_M_people', 'positive_per_k_tests']:
             if stat in stats:
