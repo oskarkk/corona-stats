@@ -103,8 +103,8 @@ def summary(filename=None, max=5):
     if date.date() == datetime.date.today():
         weekday = 'dziś'
     else:
-        weekdays = ['niedzielę', 'poniedziałek', 'wtorek', 'środę',
-                    'czwartek', 'piątek', 'sobotę']
+        weekdays = ('niedzielę', 'poniedziałek', 'wtorek', 'środę',
+                    'czwartek', 'piątek', 'sobotę')
         weekday = 'w ' + weekdays[int(date.strftime('%w'))]
 
     s = [

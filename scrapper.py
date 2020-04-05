@@ -5,8 +5,8 @@ import requests, datetime, json
 table_url = 'https://en.wikipedia.org/wiki/Template:COVID-19_testing'
 
 # column names
-headers = ['country', 'tests', 'positive', 'date',
-    'tests_per_M_people', 'positive_per_k_tests']
+headers = ('country', 'tests', 'positive', 'date',
+    'tests_per_M_people', 'positive_per_k_tests')
 
 # 'name from wikipedia table': 'name from corona-stats.online'
 name_map = {
