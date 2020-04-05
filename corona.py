@@ -52,6 +52,19 @@ def add_flags(data):
         country['countryInfo']['flag'] = flag(country['countryInfo']['iso2'])
     return
 
+# TODO: change arg data to data['data'] in every function like that
+def europe(data):
+    europe = []
+
+    with open('europe.txt', 'r') as f:
+        countries = f.read().splitlines()
+    
+    for country in data['data']:
+        if country['country'] in countries:
+            print(country['country'])
+            europe.append(country)
+    return europe
+
 def save(data, filename):
     with open(filename, 'w') as f:
         f.write(json.dumps(data))
