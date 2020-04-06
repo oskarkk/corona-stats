@@ -138,7 +138,7 @@ def nums(x):
     elif x < 1000000:
         return str(round(x,-3))[:-3]+'k'
     else:
-        s = str(round(x,-3))[:-5]
+        s = str(round(x,-5))[:-5]
         return s[:-1] + ',' + s[-1:] + 'M'
 
 if __name__ == '__main__':
