@@ -10,60 +10,74 @@ import scrapper
 emoji = {'virus': '🦠', 'skull': '💀', 'ok':'✅', 'world': '🌍', 'testtube': '🧪'}
 cases_url = 'https://corona-stats.online/?format=json&source=2'
 
-# merging AND cleaning things in <cases>
-def merge_cases_and_tests(cases, tests):
-    stats = deepcopy(cases)
 
-    # remove countries which aren't countries (e.g. Diamond Princess)
-    # maybe it would be better to find one contry and just del it
-    stats['data'] = [ x for x in stats['data'] if x['countryInfo']['_id'] ]
+class Stats:
+    def __init__(self, cases, tests):
 
-    # in the json from corona-stats.online sometimes there is null
-    # where should just be 0
-    for country in stats['data']:
-        for x in ('cases', 'deaths', 'todayCases', 'todayDeaths'):
-            if country[x] == None:
-                # give a warning just in case
-                print(country, '\nchanging None to 0')
-                country[x] = 0
+        # add countries which have id, which excludes e.g. Diamond Princess
+        self.countries = [x for x in cases['data'] if x['countryInfo']['_id']]
 
-    for country_s in stats['data']:
-        for country_t in tests:
-            if country_s['country'] == country_t['country']:
-                country_s['tests'] = deepcopy(country_t)
-                del country_s['tests']['country']
-    return stats
+        self.world = cases['worldStats']
+        self.europe = []
 
-# new / (total - new)
-def ratio(new, total):
-    denom = total - new
-    return round(new / denom, 3) if denom else None
+        with open('europe.txt', 'r') as f:
+            european = f.read().splitlines()
 
-def add_ratios(data):
-    for c in itertools.chain(data['data'], [data['worldStats']]):
+        for country in self.countries:
+            name = country['country']
+            iso_code = country['countryInfo']['iso2']
+            # in the json from corona-stats.online sometimes there is null
+            # where should just be 0
+            for x in ('cases', 'deaths', 'todayCases', 'todayDeaths'):
+                if country[x] == None:
+                    # give a warning just in case
+                    print(country, '\nchanging None to 0')
+                    country[x] = 0
+
+            # add test data to every country
+            tests_data = next( (c for c in tests if c['country'] == name), None)
+            if tests_data:
+                country['testsWiki'] = tests_data
+                del country['testsWiki']['country']
+                tests.remove(tests_data)
+            #print(len(tests))
+
+            # replace links to pics by emoji flags
+            country['countryInfo']['flag'] = flag(iso_code)
+
+            self.add_ratios(country)
+
+            # find european countries
+            if name in european:
+                self.europe.append(country)
+        
+        self.add_ratios(self.world)
+
+    # add some useful missing indicators 
+    @staticmethod
+    def add_ratios(c):
         c['todayCasesRatio'] = ratio(c['todayCases'], c['cases'])
         c['todayDeathsRatio'] = ratio(c['todayDeaths'], c['deaths'])
         c['fatalityRate'] = round(c['deaths'] / c['cases'] \
                                   if c['cases'] else None, 3)
 
-# replace links to pics by emoji flags
-def add_flags(data):
-    for country in data['data']:
-        country['countryInfo']['flag'] = flag(country['countryInfo']['iso2'])
-    return
+    # name mess but it works
+    def country(self, name):
+        for country in self.countries:
+            if country['country'] == name:
+                return country
 
-# TODO: change arg data to data['data'] in every function like that
-def europe(data):
-    europe = []
+    def top(self, sort='cases', rev=1, max=None):
+        top = sorted(self.countries, key=lambda x: x[sort], reverse=rev)
+        return top[:max]
 
-    with open('europe.txt', 'r') as f:
-        countries = f.read().splitlines()
-    
-    for country in data['data']:
-        if country['country'] in countries:
-            print(country['country'])
-            europe.append(country)
-    return europe
+    def poland(self):
+        return self.country('Poland')
+
+# new / (total - new)
+def ratio(new, total):
+    denom = total - new
+    return round(new / denom, 3) if denom else None
 
 def save(data, filename):
     with open(filename, 'w') as f:
@@ -73,39 +87,21 @@ def load(filename):
     with open(filename, 'r') as f:
         return f.read()
 
-def countries(data, sort='cases', rev=1, max=None):
-    data['data'].sort(key=lambda x: x[sort], reverse=rev)
-    return data['data'][:max]
-
-def world(data):
-    return data['worldStats']
-
-# name mess but it works
-def country(data, name):
-    for country in data['data']:
-        if country['country'] == name:
-            return country
-
 def pretty(x):
     return cpprint(x, indent=2)
 
-def polska(data):
-    for x in stats['data']:
-        if x['countryInfo']['iso2'] == 'PL':
-            return x
-
 # poland new, poland total, world total
 # TODO: world top
-def summary(filename=None, max=5):
-    pl = polska(stats)
-    w = stats['worldStats']
+def summary(data, filename=None, max=5):
+    pl = stats.poland()
+    w = stats.world
     date = datetime.datetime.strptime(pl['tests']['date'],'%Y-%m-%d')
     if date.date() == datetime.date.today():
         weekday = 'dziś'
     else:
-        weekdays = ('niedzielę', 'poniedziałek', 'wtorek', 'środę',
-                    'czwartek', 'piątek', 'sobotę')
-        weekday = 'w ' + weekdays[int(date.strftime('%w'))]
+        weekdays = ('w niedzielę', 'w poniedziałek', 'we wtorek', 'w środę',
+                    'w czwartek', 'w piątek', 'w sobotę')
+        weekday = weekdays[int(date.strftime('%w'))]
 
     s = [
         emoji['virus'], pl['todayCases'], '/',
@@ -144,6 +140,4 @@ def nums(x):
 if __name__ == '__main__':
     cases = requests.get(cases_url).json()
     tests = scrapper.tests()
-    stats = merge_cases_and_tests(cases, tests)
-    add_flags(stats)
-    add_ratios(stats)
+    stats = Stats(cases, tests)
