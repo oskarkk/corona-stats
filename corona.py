@@ -1,4 +1,4 @@
-#!/usr/bin/python -i
+#!/usr/bin/python3 -i
 
 import requests, datetime, json, itertools
 from flag import flag # flag('us')
@@ -26,6 +26,11 @@ class Stats:
         for country in self.countries:
             name = country['country']
             iso_code = country['countryInfo']['iso2']
+
+            # make names better
+            if country['country'] in scrapper.name_map:
+                country['country'] = scrapper.name_map[country['country']]
+
             # in the json from corona-stats.online sometimes there is null
             # where should just be 0
             for x in ('cases', 'deaths', 'todayCases', 'todayDeaths'):
@@ -95,7 +100,8 @@ def pretty(x):
 def summary(data, filename=None, max=5):
     pl = stats.poland()
     w = stats.world
-    date = datetime.datetime.strptime(pl['tests']['date'],'%Y-%m-%d')
+    testy = pl['testsWiki']
+    date = datetime.datetime.strptime(testy['date'],'%Y-%m-%d')
     if date.date() == datetime.date.today():
         weekday = 'dziś'
     else:
@@ -113,7 +119,7 @@ def summary(data, filename=None, max=5):
         emoji['virus'], pl['cases'], '/',
         emoji['skull'], pl['deaths'], '/',
         emoji['ok'], pl['recovered'], '/',
-        emoji['testtube'], nums(pl['tests']['tests']),
+        emoji['testtube'], nums(testy['tests']),
         '\n(liczba testów aktualizowana', weekday+')\n\n',
 
         emoji['world']+'  ',

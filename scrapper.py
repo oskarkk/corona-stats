@@ -8,15 +8,20 @@ table_url = 'https://en.wikipedia.org/wiki/Template:COVID-19_testing'
 headers = ('country', 'tests', 'positive', 'date',
     'tests_per_M_people', 'positive_per_k_tests')
 
-# 'name from wikipedia table': 'name from corona-stats.online'
+# 'name from wikipedia table or cases table': 'better name'
 name_map = {
     'United States (unofficial)': 'USA',
     'United Kingdom': 'UK',
-    'South Korea': 'S. Korea',
-    'Palestine': 'Palestinian Territory, Occupied',
+    'S. Korea': 'South Korea',
+    'Palestinian Territory, Occupied': 'Palestine',
     'North Macedonia': 'Macedonia',
-    'Bosnia and Herzegovina': 'Bosnia',
-    'United Arab Emirates': 'UAE'
+    'Bosnia': 'Bosnia and Herzegovina',
+    'UAE': 'United Arab Emirates',
+    'Holy See (Vatican City State)': 'Vatican',
+    'Tanzania, United Republic of': 'Tanzania',
+    'Moldova, Republic of': 'Moldova',
+    'Syrian Arab Republic': 'Syria',
+    'Libyan Arab Jamahiriya': 'Libia'
 }
 
 # remove unneeded characters etc
@@ -42,9 +47,11 @@ def tests():
         cells = country(['th','td'])
         values = [clean(cell.get_text().strip()) for cell in cells]
         stats = dict(zip(headers, values))
+        name = stats['country']
 
         # remove regions of countries
-        if ':' in stats['country']:
+        # now it doesn't do nothing as there are no colons, but whatever
+        if ':' in name:
             continue
 
         # solve differences between countries names in sources
