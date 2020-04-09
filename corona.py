@@ -3,7 +3,7 @@
 import requests, datetime, json, itertools
 from flag import flag # flag('us')
 from prettyprinter import cpprint
-from copy import deepcopy
+from pathlib import Path
 
 import scrapper
 
@@ -58,12 +58,19 @@ class Stats:
         self.add_ratios(self.world)
 
     @classmethod
-    def load(cls, filename):
+    def load(cls, filename=None):
+        if not filename:
+            filename = max(Path('./data').glob('stats-*.json'))
+        
         with open(filename, 'r') as f:
             string = json.loads(f.read())
             return cls(from_json=string)
 
-    def save(self, filename):
+    def save(self, filename=None):
+        if not filename:
+            t = now()
+            filename = 'data/stats-' + t + '.json'
+        
         with open(filename, 'w') as f:
             dic = {'countries': self.countries, 'world': self.world}
             f.write(json.dumps(dic))
@@ -100,18 +107,13 @@ class Stats:
     def poland(self):
         return self.country('Poland')
 
+def now():
+    return datetime.datetime.today().strftime('%Y-%m-%d--%H-%M-%S')
+
 # new / (total - new)
 def ratio(new, total):
     denom = total - new
     return round(new / denom, 3) if denom else None
-
-def save(data, filename):
-    with open(filename, 'w') as f:
-        f.write(json.dumps(data))
-
-def load(filename):
-    with open(filename, 'r') as f:
-        return f.read()
 
 def pretty(x):
     return cpprint(x, indent=2)
@@ -132,15 +134,14 @@ def summary(data, filename=None, max=5):
 
     s = [
         emoji['virus'], pl['todayCases'], '/',
-        emoji['skull'], pl['todayDeaths'],
-        '\nŚmiertelność wynosi aktualnie',
-        str(round(pl['fatalityRate']*100, 1)) + '%\n\n',
+        emoji['skull'], pl['todayDeaths'], '\n\n',
 
         pl['countryInfo']['flag']+'  ',
         emoji['virus'], pl['cases'], '/',
         emoji['skull'], pl['deaths'], '/',
         emoji['ok'], pl['recovered'], '/',
         emoji['testtube'], nums(testy['tests']),
+        '\nŚmiertelność:', str(round(pl['fatalityRate']*100, 1)) + '%',
         '\n(liczba testów aktualizowana', weekday+')\n\n',
 
         emoji['world']+'  ',
@@ -149,7 +150,10 @@ def summary(data, filename=None, max=5):
         emoji['ok'], nums(w['recovered'])
     ]
     
-    if filename:
+    if filename != 0:
+        if not filename:
+            t = now()
+            filename = 'data/summary-' + t + '.txt'
         with open(filename, 'w') as f:
             print(*s, file=f)
     
