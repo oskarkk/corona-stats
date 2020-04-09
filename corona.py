@@ -10,6 +10,7 @@ import scrapper
 emoji = {'virus': '🦠', 'skull': '💀', 'ok':'✅', 'world': '🌍', 'testtube': '🧪'}
 cases_url = 'https://corona-stats.online/?format=json&source=2'
 
+Path('data').mkdir(exist_ok=True)
 
 class Stats:
     def __init__(self, cases=None, tests=None, from_json=None):
