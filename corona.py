@@ -12,24 +12,27 @@ cases_url = 'https://corona-stats.online/?format=json&source=2'
 
 
 class Stats:
-    def __init__(self, cases, tests):
+    def __init__(self, cases=None, tests=None, from_json=None):
+        if from_json:
+            self.countries = from_json['countries']
+            self.world = from_json['world']
+            self.add_europe()
+        else:
+            # add countries which have id, which excludes e.g. Diamond Princess
+            self.countries = [x for x in cases['data'] if x['countryInfo']['_id']]
 
-        # add countries which have id, which excludes e.g. Diamond Princess
-        self.countries = [x for x in cases['data'] if x['countryInfo']['_id']]
+            self.world = cases['worldStats']
+            self.add_more_info(tests)
+            self.add_europe()
 
-        self.world = cases['worldStats']
-        self.europe = []
-
-        with open('europe.txt', 'r') as f:
-            european = f.read().splitlines()
-
+    def add_more_info(self, tests):
         for country in self.countries:
             name = country['country']
             iso_code = country['countryInfo']['iso2']
 
             # make names better
-            if country['country'] in scrapper.name_map:
-                country['country'] = scrapper.name_map[country['country']]
+            if name in scrapper.name_map:
+                country['country'] = scrapper.name_map[name]
 
             # in the json from corona-stats.online sometimes there is null
             # where should just be 0
@@ -51,12 +54,30 @@ class Stats:
             country['countryInfo']['flag'] = flag(iso_code)
 
             self.add_ratios(country)
-
-            # find european countries
-            if name in european:
-                self.europe.append(country)
         
         self.add_ratios(self.world)
+
+    @classmethod
+    def load(cls, filename):
+        with open(filename, 'r') as f:
+            string = json.loads(f.read())
+            return cls(from_json=string)
+
+    def save(self, filename):
+        with open(filename, 'w') as f:
+            dic = {'countries': self.countries, 'world': self.world}
+            f.write(json.dumps(dic))
+
+    def add_europe(self):
+        self.europe = []
+
+        with open('europe.txt', 'r') as f:
+            european = f.read().splitlines()
+
+        for country in self.countries:
+            # find european countries
+            if country['country'] in european:
+                self.europe.append(country)
 
     # add some useful missing indicators 
     @staticmethod
