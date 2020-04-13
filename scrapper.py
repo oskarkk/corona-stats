@@ -5,7 +5,9 @@ import requests, datetime, json
 table_url = 'https://en.wikipedia.org/wiki/Template:COVID-19_testing'
 
 # column names
-headers = ('country', 'tests', 'positive', 'date',
+#headers = ('country', 'tests', 'positive', 'date',
+#    'tests_per_M_people', 'positive_per_k_tests')
+headers = ('country', 'date', 'tests', 'positive', 'positive_ratio',
     'tests_per_M_people', 'positive_per_k_tests')
 
 # 'name from wikipedia table or cases table': 'better name'
@@ -72,6 +74,9 @@ def tests():
         for stat in ['tests_per_M_people', 'positive_per_k_tests']:
             if stat in stats:
                 stats[stat] = float(stats[stat].replace(',',''))
+
+        if 'positive_ratio' in stats:
+            stats['positive_ratio'] = float(stats['positive_ratio']) / 100
 
         # Earlier, they didn't have China in the list, they only had China's
         # provinces. Now there is an empty "China" row (only country name),
