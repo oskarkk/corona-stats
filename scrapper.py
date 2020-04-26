@@ -7,8 +7,10 @@ table_url = 'https://en.wikipedia.org/wiki/Template:COVID-19_testing'
 # column names
 #headers = ('country', 'tests', 'positive', 'date',
 #    'tests_per_M_people', 'positive_per_k_tests')
-headers = ('country', 'date', 'tests', 'positive', 'positive_ratio',
-    'tests_per_M_people', 'positive_per_k_tests')
+headers = (
+    'country', 'date', 'tests', 'tests_units', 'positive', 'positive_units',
+    'positive_ratio', 'tests_per_M_people', 'positive_per_k_tests'
+)
 
 # 'name from wikipedia table or cases table': 'better name'
 name_map = {
@@ -86,7 +88,13 @@ def tests():
 
         # change dates from something like "2 Apr" to yyyy-mm-dd
         # span['data-sort-value'] won't work cos date attr isn't in every row
-        date = datetime.datetime.strptime(stats['date'],'%d %b')
+        # UPDATE 2020-04-26: they changed it to format like "2 April",
+        # but not everywhere, so we need to try to do it both ways
+        try:
+            date = datetime.datetime.strptime(stats['date'],'%d %B')
+        except ValueError:
+            date = datetime.datetime.strptime(stats['date'],'%d %b')
+        
         # it won't work next year
         stats['date'] = date.replace(year=2020).strftime('%Y-%m-%d')
 
