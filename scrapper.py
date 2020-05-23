@@ -8,7 +8,7 @@ table_url = 'https://en.wikipedia.org/wiki/Template:COVID-19_testing'
 #headers = ('country', 'tests', 'positive', 'date',
 #    'tests_per_M_people', 'positive_per_k_tests')
 headers = (
-    'country', 'date', 'tests', 'tests_units', 'positive', 'positive_units',
+    'country', 'date', 'tests', 'tests_units', 'positive',
     'positive_ratio', 'tests_per_M_people', 'positive_per_k_tests'
 )
 
