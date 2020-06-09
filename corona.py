@@ -5,15 +5,15 @@ from flag import flag # flag('us')
 from prettyprinter import cpprint
 from pathlib import Path
 
-import scrapper
+from scrapper import name_map
 
-emoji = {'virus': '🦠', 'skull': '💀', 'ok':'✅', 'world': '🌍', 'testtube': '🧪'}
+emoji = {'virus': '🦠', 'skull': '💀', 'ok':'✅', 'world': '🌍', 'test': '🧪'}
 cases_url = 'https://corona-stats.online/?format=json&source=2'
 
 Path('data').mkdir(exist_ok=True)
 
 class Stats:
-    def __init__(self, cases=None, tests=None, from_json=None):
+    def __init__(self, cases=None, from_json=None):
         if from_json:
             self.countries = from_json['countries']
             self.world = from_json['world']
@@ -23,17 +23,17 @@ class Stats:
             self.countries = [x for x in cases['data'] if x['countryInfo']['_id']]
 
             self.world = cases['worldStats']
-            self.add_more_info(tests)
+            self.add_more_info()
             self.add_europe()
 
-    def add_more_info(self, tests):
+    def add_more_info(self):
         for country in self.countries:
             name = country['country']
             iso_code = country['countryInfo']['iso2']
 
             # make names better
-            if name in scrapper.name_map:
-                country['country'] = scrapper.name_map[name]
+            if name in name_map:
+                country['country'] = name_map[name]
 
             # in the json from corona-stats.online sometimes there is null
             # where should just be 0
@@ -42,14 +42,6 @@ class Stats:
                     # give a warning just in case
                     print(country, '\nchanging None to 0')
                     country[x] = 0
-
-            # add test data to every country
-            tests_data = next( (c for c in tests if c['country'] == name), None)
-            if tests_data:
-                country['testsWiki'] = tests_data
-                del country['testsWiki']['country']
-                tests.remove(tests_data)
-            #print(len(tests))
 
             # replace links to pics by emoji flags
             country['countryInfo']['flag'] = flag(iso_code)
@@ -124,14 +116,6 @@ def pretty(x):
 def summary(data, filename=None, max=5):
     pl = stats.poland()
     w = stats.world
-    testy = pl['testsWiki']
-    date = datetime.datetime.strptime(testy['date'],'%Y-%m-%d')
-    if date.date() == datetime.date.today():
-        weekday = 'dziś'
-    else:
-        weekdays = ('w niedzielę', 'w poniedziałek', 'we wtorek', 'w środę',
-                    'w czwartek', 'w piątek', 'w sobotę')
-        weekday = weekdays[int(date.strftime('%w'))]
 
     s = [
         emoji['virus'], pl['todayCases'], '/',
@@ -141,9 +125,8 @@ def summary(data, filename=None, max=5):
         emoji['virus'], pl['cases'], '/',
         emoji['skull'], pl['deaths'], '/',
         emoji['ok'], pl['recovered'], '/',
-        emoji['testtube'], nums(testy['tests']),
-        '\nŚmiertelność:', str(round(pl['fatalityRate']*100, 1)) + '%',
-        '\n(liczba testów aktualizowana', weekday+')\n\n',
+        emoji['test'], nums(pl['tests']),
+        '\nŚmiertelność:', str(round(pl['fatalityRate']*100, 1)) + '%\n\n',
 
         emoji['world']+'  ',
         emoji['virus'], nums(w['cases']), '/',
@@ -171,5 +154,4 @@ def nums(x):
 
 if __name__ == '__main__':
     cases = requests.get(cases_url).json()
-    tests = scrapper.tests()
-    stats = Stats(cases, tests)
+    stats = Stats(cases)
