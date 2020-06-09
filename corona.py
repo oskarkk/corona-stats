@@ -82,6 +82,8 @@ class Stats:
     # add some useful missing indicators 
     @staticmethod
     def add_ratios(c):
+        c['recoveredRatio'] = round(c['recovered'] / c['cases'] \
+                                    if c['cases'] else None, 3)
         c['todayCasesRatio'] = ratio(c['todayCases'], c['cases'])
         c['todayDeathsRatio'] = ratio(c['todayDeaths'], c['deaths'])
         c['fatalityRate'] = round(c['deaths'] / c['cases'] \
@@ -122,10 +124,17 @@ def summary(data, filename=None, max=5):
         emoji['skull'], pl['todayDeaths'], '\n\n',
 
         pl['countryInfo']['flag']+'  ',
-        emoji['virus'], pl['cases'], '/',
+        emoji['virus'], nums(pl['cases']), '/',
         emoji['skull'], pl['deaths'], '/',
-        emoji['ok'], pl['recovered'], '/',
+        emoji['ok'], nums(pl['recovered']),
+        '(' + str(round(pl['recoveredRatio']*100, 1)) + '%)', '/',
         emoji['test'], nums(pl['tests']),
+
+        '\nNa milion:',
+        emoji['virus'], pl['casesPerOneMillion'], '/',
+        emoji['skull'], pl['deathsPerOneMillion'], '/',
+        emoji['test'], nums(pl['testsPerOneMillion']),
+
         '\nŚmiertelność:', str(round(pl['fatalityRate']*100, 1)) + '%\n\n',
 
         emoji['world']+'  ',
